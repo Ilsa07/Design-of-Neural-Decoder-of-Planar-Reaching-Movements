@@ -1,0 +1,81 @@
+
+function [x, y] = positionEstimator(test_data, modelParameters)
+    
+    % ===== Initializing variables ===== % 
+    % Returns the current ms of the trial
+   	current_coordinate = length(test_data.spikes);
+    % Initialize window at 100 ms (NEEDS TO MATCH TRAINING SETIUP)
+    window_size = 100;
+    % Initialize delay at 50 ms (NEEDS TO MATCH TRAINING SETUP)
+    delay = 150;
+    
+    
+                % Compute velocities
+%             for coord = 1:length(current_trial_hand_coords)
+%                 
+%                 % if above the hand_coords length stop
+%                 if coord > length(current_trial_hand_coords)
+%                     break
+%                 end
+%                 
+%                 
+%                 % over 10 coordinates
+%                 vel = sqrt((current_trial_hand_vels(1,coord+10)-current_trial_hand_vels(2,coord))^2 ...
+%                 +(current_trial_hand_vels(2,coord+10)-current_trial_hand_vels(2,coord))^2)...
+%                 /10;
+%             
+%                 % append the velocities
+%                 velocities = [velocities vel];
+%                 
+%             end
+    
+    
+    window_center = window_size/2;
+    % The starting position of our window (taking into account the delay)
+    start_window = current_coordinate - delay - window_center;
+    % The end position of the window (taking into account the delay)
+    end_window = current_coordinate - delay;
+    
+    % ===== Feature extraction ===== %
+    % Extract the predictor segment based on the window
+    segment = test_data.spikes(:,start_window:end_window-1);
+    % Sum the spikes over window timesteps
+    features = sum(segment,2);
+    
+    % Start with the initial coordinate
+    if current_coordinate < 331
+        velocity = 0;
+
+    elseif current_coordinate == 340
+        velocity = sqrt((test_data.decodedHandPos(1,1) - test_data.startHandPos(1))^2 ...
+            + (test_data.decodedHandPos(2,1) - test_data.startHandPos(2))^2);
+        
+    else
+        coord_counter = size(test_data.decodedHandPos,2);
+        velocity = sqrt((test_data.decodedHandPos(1,coord_counter) - test_data...
+            .decodedHandPos(1,coord_counter-1))^2 + test_data.decodedHandPos(2,coord_counter)...
+            - test_data.decodedHandPos(2,coord_counter-1))^2);
+    end
+    features = [features; velocity];
+    
+    
+    
+   
+    % ===== Prediction ===== %
+    pred = predict(modelParameters,features);
+    
+
+    
+    % Maintain a data structure of size 10
+    
+    
+    
+    
+    
+    
+    % Outputs
+    x = pred(1);
+    y = pred(2);
+   
+    
+end
